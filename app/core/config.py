@@ -12,6 +12,13 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     SAP_DATABASE_URL: str = ""
     
+    # --- SAP MSSQL (read-only) ---
+    SAP_DB_HOST: str = ""
+    SAP_DB_PORT: int = 1433
+    SAP_DB_USER: str = ""
+    SAP_DB_PASSWORD: str = ""
+    SAP_DB_NAME: str = ""
+    
     @property
     def async_database_url(self) -> str:
         """For App — asyncpg driver."""
