@@ -9,6 +9,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.db.base import Base
+from app.core.config import settings
 
 # Read the .env file
 load_dotenv()
@@ -19,7 +20,7 @@ load_dotenv()
 config = context.config
 
 # Set the SQLAlchemy URL from the environment variable
-config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
+config.set_main_option("sqlalchemy.url", settings.sync_database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
