@@ -9,6 +9,8 @@ from app.models.delivery_info_sap import RdlDeliveryInfoSap #noqa F401
 from app.models.delivery_return_item import RdlDeliveryReturnItem #noqa F401
 from app.models.depot import RdlDepotList  # noqa: F401
 from app.models.material import RplMaterialList #noqa F401
+from app.models.overdue import RdlOverdue #noqa F401
+from app.models.payment import RdlPaymentHistory #noqa F401
 from app.models.route import RdlRouteList, RdlRouteHistory  # noqa: F401
 from app.models.sales_info_sap import RplSalesInfoSap #noqa F401
 from app.models.sales_user import RplUserList #noqa F401
