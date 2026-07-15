@@ -21,18 +21,18 @@ class RplCustomerList(Base, TimestampMixin):
 
     customer_id: Mapped[str] = mapped_column(String(10), primary_key=True)
     shop_name: Mapped[str] = mapped_column(String(100))
-    customer_name: Mapped[str] = mapped_column(String(100))
+    customer_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     route_code: Mapped[str] = mapped_column(
         String(10), 
         ForeignKey("rdl_route_list.route_code"), 
         index=True
     )
-    mobile_no: Mapped[str] = mapped_column(String(15))
+    mobile_no: Mapped[str | None] = mapped_column(String(15), nullable=True)
     email: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    street: Mapped[str] = mapped_column(Text)
-    post_code: Mapped[str] = mapped_column(String(10))
-    upazila: Mapped[str] = mapped_column(String(50))
-    district: Mapped[str] = mapped_column(String(50))
+    street: Mapped[str | None] = mapped_column(Text, nullable=True)
+    post_code: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    upazila: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    district: Mapped[str | None] = mapped_column(String(50), nullable=True)
     drug_reg_no: Mapped[str | None] = mapped_column(String(50), nullable=True)
     customer_group: Mapped[str | None] = mapped_column(String(50), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
