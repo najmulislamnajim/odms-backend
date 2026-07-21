@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import String, Integer, DateTime, Boolean, Index, Text
+from sqlalchemy import String, Integer, DateTime, Boolean, Index, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base_class import Base
@@ -10,7 +10,8 @@ from app.db.mixins import TimestampMixin
 class RdlCustomerSyncReject(Base, TimestampMixin):
     __tablename__ = "rdl_customer_sync_reject"
     __table_args__ = (
-        Index("ix_customer_reject_resolved", "resolved"),  # unresolved khojar jonn
+        Index("ix_customer_reject_resolved", "resolved"),
+        UniqueConstraint("customer_id", "sync_date", name="uq_customer_sync_reject_customer_id_sync_date"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
