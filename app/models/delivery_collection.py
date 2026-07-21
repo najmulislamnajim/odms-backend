@@ -43,7 +43,7 @@ class RdlDeliveryCollection(Base, TimestampMixin):
     billing_method: Mapped[str | None] = mapped_column(String(10), nullable=True)
     company_code: Mapped[str] = mapped_column(String(10))
     assignment: Mapped[str] = mapped_column(String(10))
-    reference: Mapped[str] = mapped_column(String(10))
+    reference: Mapped[str] = mapped_column(String(20))
     item_category: Mapped[str] = mapped_column(String(10))
     delivery_status:Mapped[bool] = mapped_column(Boolean, default=False)
     delivery_datetime: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
