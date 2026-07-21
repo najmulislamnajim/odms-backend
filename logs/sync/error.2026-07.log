@@ -1,0 +1,2 @@
+2026-07-21 12:34:35 | ERROR    | sync.runner | test_sync sync FAIL: ValueError: test error — SAP down
+2026-07-21 12:38:23 | ERROR    | sync.runner | test2 sync FAIL: ValueError: test — started/ended check

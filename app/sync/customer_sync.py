@@ -1,4 +1,5 @@
 import psycopg2
+from datetime import date 
 from app.core.config import settings
 from app.sync.base_sync import bulk_upsert, unique_fetch_from_sap
 
@@ -60,11 +61,42 @@ def _load_valid_routes() -> set[str]:
             return {row[0] for row in cur.fetchall()}
     finally:
         conn.close()
+        
+def _save_rejects(rejected: list[dict], sync_date: str) -> None:
+    """Route-missing customer-der rdl_customer_sync_reject-e boshai (admin-er jonn)।"""
+    if not rejected:
+        return
+
+    import psycopg2
+    from psycopg2.extras import execute_values
+    from app.core.config import settings
+
+    conn = psycopg2.connect(settings.sync_database_url.replace("+psycopg2", ""))
+    try:
+        rows = [
+            (r["customer_id"], r["route_code"], r.get("shop_name"),
+             "route_missing", sync_date, False)
+            for r in rejected
+        ]
+
+        with conn.cursor() as cur:
+            execute_values(
+                cur,
+                "INSERT INTO rdl_customer_sync_reject "
+                "(customer_id, route_code, shop_name, reason, sync_date, resolved) VALUES %s"
+                "ON CONFLICT (customer_id, sync_date) DO NOTHING",
+                rows,
+            )
+        conn.commit()
+    finally:
+        conn.close()
 
 
-def sync_customer():
+def sync_customer(sync_date: str | None = None):
+    if sync_date is None:
+        sync_date = date.today().isoformat()
+        
     valid_routes = _load_valid_routes()
-
     valid_rows = []
     rejected = []   # route missing — admin-ke janate hobe
 
@@ -86,5 +118,7 @@ def sync_customer():
         conflict_columns=CONFLICT_COLUMNS,
         rows=valid_rows,   # already _clean kora, kintu bulk_upsert abar transform korbe na (transform=None)
     )
+    
+    _save_rejects(rejected, sync_date)
 
-    return inserted, rejected
+    return inserted, len(rejected)
