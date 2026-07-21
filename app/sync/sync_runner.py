@@ -47,6 +47,7 @@ def run_all_syncs(sync_date: str | None = None):
     from app.sync.customer_sync import sync_customer
     from app.sync.sales_sync import sync_sales_info
     from app.sync.delivery_info_sync import sync_delivery_info
+    from app.sync.transform import transform_deliveries
 
     results = {}
 
@@ -56,5 +57,7 @@ def run_all_syncs(sync_date: str | None = None):
 
     results["sales"] = run_sync("sales", lambda: sync_sales_info(sync_date), sync_date)
     results["delivery_info"] = run_sync("delivery_info", lambda: sync_delivery_info(sync_date), sync_date)
+    
+    results["transform"] = run_sync("transform", lambda: transform_deliveries(sync_date), sync_date)
 
     return results
