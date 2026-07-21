@@ -22,8 +22,8 @@ class RdlUserList(Base, TimestampMixin):
     da_code: Mapped[str] = mapped_column(String(10), primary_key=True)
     da_name: Mapped[str] = mapped_column(String(100))
     mobile_no: Mapped[str] = mapped_column(String(15))
-    user_type: Mapped[str] = mapped_column(String(20))
-    designation: Mapped[str] = mapped_column(String(50))
+    user_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    designation: Mapped[str | None] = mapped_column(String(50), nullable=True)
     depot_code: Mapped[str] = mapped_column(
         String(10), 
         ForeignKey("rdl_depot_list.depot_code", ondelete="RESTRICT"), 
