@@ -17,4 +17,5 @@ class RdlDeliveryInfoSap(Base, TimestampMixin):
     vehicle_no: Mapped[str] = mapped_column(String(25))
     da_code: Mapped[str] = mapped_column(String(10))
     da_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    route: Mapped[str] = mapped_column(String(6))
     
