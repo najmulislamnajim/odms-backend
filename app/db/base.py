@@ -16,3 +16,5 @@ from app.models.sales_info_sap import RplSalesInfoSap #noqa F401
 from app.models.sales_user import RplUserList #noqa F401
 from app.models.user_credential import RdlUserCredential  # noqa: F401
 from app.models.user import RdlUserList, RdlUserHistory  # noqa: F401
+from app.models.sync_log import RdlSyncLog  # noqa: F401
+from app.models.customer_sync_reject import RdlCustomerSyncReject  # noqa: F401
