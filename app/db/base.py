@@ -20,3 +20,4 @@ from app.models.sync_log import RdlSyncLog  # noqa: F401
 from app.models.customer_sync_reject import RdlCustomerSyncReject  # noqa: F401
 from app.models.transform_skip import RdlTransformSkip  # noqa: F401
 from app.models.refresh_token import RdlRefreshToken  # noqa: F401
+from app.models.return_reason import RdlReturnReason  # noqa: F401
