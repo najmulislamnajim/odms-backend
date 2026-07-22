@@ -1,9 +1,14 @@
+import traceback
 from fastapi import FastAPI
-from app.api import auth
+from app.api import auth, assignments
 from app.db import base  # noqa: F401  -- loads all models into the registry
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException, RequestValidationError
+from app.core.logging import get_logger
+
+logger = get_logger("api", category="api")
+
 
 app = FastAPI(
     title="ODMS Backend",
@@ -12,6 +17,7 @@ app = FastAPI(
 )
 
 app.include_router(auth.router)
+app.include_router(assignments.router)
 
 @app.get("/")
 async def root():
@@ -44,4 +50,20 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=422,
         content={"success": False, "message": message, "data": None},
+    )
+    
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Catch-all for unexpected errors, returned in the standard format."""
+    logger.error(
+        f"Unhandled error on {request.method} {request.url.path}: "
+        f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}"
+    )
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "message": "Something went wrong. Please try again.",
+            "data": None,
+        },
     )
