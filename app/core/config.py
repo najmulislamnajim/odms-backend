@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     SAP_DB_PASSWORD: str = ""
     SAP_DB_NAME: str = ""
     
+    # JWT 
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60
+    REFRESH_EXPIRE_DAYS: int = 1
+    
     @property
     def async_database_url(self) -> str:
         """For App — asyncpg driver."""

@@ -14,3 +14,4 @@ wheels/
 
 logs/
 data/
+scripts/seed_credentials.py
