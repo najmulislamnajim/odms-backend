@@ -17,3 +17,4 @@ class RdlUserCredential(Base, TimestampMixin):
     must_reset: Mapped[bool] = mapped_column(Boolean, default=False)
     is_locked: Mapped[bool] = mapped_column(Boolean, default=False)
     user: Mapped["RdlUserList"] = relationship(back_populates="credential")
+    allow_multi_device: Mapped[bool] = mapped_column(Boolean, default=False)
