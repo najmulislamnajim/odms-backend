@@ -5,6 +5,8 @@ from app.db import base  # noqa: F401  -- loads all models into the registry
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException, RequestValidationError
+from fastapi.staticfiles import StaticFiles
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from app.core.logging import get_logger
 
 logger = get_logger("api", category="api")
@@ -14,10 +16,15 @@ app = FastAPI(
     title="ODMS Backend",
     description="Radiant Pharmaceuticals — Outbound Delivery Management System",
     version="0.1.0",
+    docs_url=None, 
+    redoc_url=None,
+    author="Najmul Islam",
 )
 
 app.include_router(auth.router)
 app.include_router(assignments.router)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def root():
@@ -66,4 +73,20 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
             "message": "Something went wrong. Please try again.",
             "data": None,
         },
+    )
+    
+@app.get("/api/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=app.title + " - Swagger UI",
+        swagger_favicon_url="/static/images/odms.png" 
+    )
+
+@app.get("/api/redoc", include_in_schema=False)
+async def custom_redoc_html():
+    return get_redoc_html(
+        openapi_url=app.openapi_url,
+        title=app.title + " - ReDoc",
+        redoc_favicon_url="/static/images/odms.png"
     )
