@@ -1,6 +1,6 @@
 import traceback
 from fastapi import FastAPI
-from app.api import auth, assignments
+from app.api import auth, assignments, deliveries
 from app.db import base  # noqa: F401  -- loads all models into the registry
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -23,6 +23,7 @@ app = FastAPI(
 
 app.include_router(auth.router)
 app.include_router(assignments.router)
+app.include_router(deliveries.router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

@@ -1,0 +1,105 @@
+{
+  "success": true,
+  "message": "Assignment Detail.",
+  "data": {
+    "customer": {
+      "customer_id": "11149362",
+      "shop_name": "Al-Shefa Medicine",
+      "address": "Khorompotty, Near Fatema (R.) Hospital",
+      "mobile_no": "01911281099"
+    },
+    "billing_date": "2026-07-15",
+    "total_amount": "1378.12",
+    "delivered_amount": "0.00",
+    "collected_amount": "0.00",
+    "invoices": [
+      {
+        "billing_doc_no": "9051893606",
+        "producer_company": "NLS",
+        "invoice_value": "748.69",
+        "delivered_amount": "0.00",
+        "return_amount": "0.00",
+        "collected_amount": "0.00",
+        "delivery_status": false,
+        "return_status": false,
+        "collection_status": false,
+        "return_type": null,
+        "materials": [
+          {
+            "material_id": "44050656",
+            "material_name": "AZYTH 500MG 9FCT BD",
+            "batch": "7023926",
+            "quantity": 2,
+            "net_val": "748.69",
+            "delivery_quantity": 0,
+            "delivery_net_val": "0.00",
+            "return_quantity": 0,
+            "return_net_val": "0.00",
+            "return_reason_code": null
+          }
+        ]
+      },
+      {
+        "billing_doc_no": "9051893649",
+        "producer_company": "RPL",
+        "invoice_value": "629.43",
+        "delivered_amount": "0.00",
+        "return_amount": "0.00",
+        "collected_amount": "0.00",
+        "delivery_status": false,
+        "return_status": false,
+        "collection_status": false,
+        "return_type": null,
+        "materials": [
+          {
+            "material_id": "14000096",
+            "material_name": "Rivotril Tab 2mg (60s)",
+            "batch": "1127826",
+            "quantity": 1,
+            "net_val": "629.43",
+            "delivery_quantity": 0,
+            "delivery_net_val": "0.00",
+            "return_quantity": 0,
+            "return_net_val": "0.00",
+            "return_reason_code": null
+          }
+        ]
+      }
+    ]
+  },
+  "pagination": null
+}
+
+
+{
+  "customer_id": "11149362",
+  "billing_date": "2026-07-15",
+  "latitude": 23.8103,
+  "longitude": 90.4125,
+  "invoices": [
+    {
+      "billing_doc_no": "9051893606",
+      "items": [
+        {
+          "material_id": "44050656",
+          "batch": "7023926",
+          "delivery_quantity": 1,
+          "return_quantity": 1,
+          "return_reason_code":"567"
+        }
+      ]
+    },
+    {
+      "billing_doc_no": "9051893649",
+      "items": [
+        {
+          "material_id": "14000096",
+          "batch": "1127826",
+          "delivery_quantity": 1,
+          "return_quantity": 0
+        }
+      ]
+    }
+
+  ]
+}
