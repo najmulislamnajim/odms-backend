@@ -182,3 +182,60 @@ async def list_assignments(
         message=f"{len(customers)} customer(s) found.",
         data = customers,
     )
+    
+    
+@router.get("/{customer_id}", response_model=APIResponse[AssignmentDetail])
+async def get_assignment_detail(
+    customer_id: str = Path(..., description="Customer ID"),
+    billing_date: date_type | None = Query(None, description="Defaults to today"),
+    current_da: RdlUserList = Depends(get_current_da),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return one cutomer's invoices, product lines and current state."""
+    target_date = billing_date or date_type.today()
+    
+    # Selectionload fetches items and materials in bulk, avoiding N+1 queries.
+    stmt = (
+        select(RdlDeliveryCollection)
+        .options(
+            selectinload(RdlDeliveryCollection.customer),
+            selectinload(RdlDeliveryCollection.items).selectinload(
+                RdlDeliveryReturnItem.material
+            ),
+        ).where(
+            RdlDeliveryCollection.da_code == current_da.da_code,
+            RdlDeliveryCollection.customer_id == customer_id,
+            RdlDeliveryCollection.billing_date == target_date,
+        ).order_by(
+            RdlDeliveryCollection.billing_doc_no
+        )
+    )
+    
+    invoices = (await db.execute(stmt)).scalars().all()
+    
+    if not invoices:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No assignment found for this customer on the given date.",
+        )
+    
+    customer = invoices[0].customer 
+    invoice_details = [_build_invoice_detail(invoice) for invoice in invoices]
+    
+    return APIResponse(
+        message="Assignment Detail.",
+        data=AssignmentDetail(
+            customer = CustomerInfo(
+                customer_id = customer.customer_id,
+                shop_name=customer.shop_name,
+                address=customer.street,
+                mobile_no=customer.mobile_no,
+            ),
+            billing_date=target_date,
+            total_amount=sum((inv.invoice_value for inv in invoices), ZERO),
+            delivered_amount=sum((d.delivered_amount for d in invoice_details), ZERO),
+            collected_amount = sum((d.collected_amount for d in invoice_details), ZERO),
+            overdue = ZERO,
+            invoices=invoice_details,
+        ),
+    )
