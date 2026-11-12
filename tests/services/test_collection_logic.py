@@ -2,8 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.collection_logic import paisa, split_round_down
-
+from app.services.delivery.collection_logic import paisa, split_round_down
 
 def D(x):
     """Shorthand for building Decimals in tests."""
