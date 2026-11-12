@@ -17,9 +17,6 @@ class DeliveryItemInput(BaseModel):
     batch: str
     delivery_quantity: int = Field(ge=0, description="Quantity actually delivered")
     return_quantity: int = Field(ge=0, description="Quantity returned")
-    return_reason_code: str | None = Field(
-        default=None, description="Required when return_quantity > 0"
-    )
 
 
 class DeliveryInvoiceInput(BaseModel):
@@ -27,6 +24,9 @@ class DeliveryInvoiceInput(BaseModel):
 
     billing_doc_no: str
     items: list[DeliveryItemInput] = Field(min_length=1)
+    return_reason_code: str | None = Field(
+        default=None, description="Required when any item has return_quantity > 0"
+    )
 
 
 class DeliverySaveRequest(BaseModel):

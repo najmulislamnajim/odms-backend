@@ -99,18 +99,17 @@ def transform_deliveries(billing_date: str | None = None) -> dict:
             # --- 2. ITEM: rdl_delivery_return_item ---
             item_sql = f"""
                 INSERT INTO rdl_delivery_return_item (
-                    billing_doc_no, material_id, batch, team, quantity,
-                    tp, vat, net_val,
+                    billing_doc_no, material_id, batch, material_name, producer_company, team, tp, vat, quantity, net_val,
                     delivery_quantity, return_quantity, delivery_net_val, return_net_val
                 )
                 SELECT
-                    s.billing_doc_no, s.material_id, s.batch, s.team, s.quantity,
-                    s.tp, s.vat, s.net_val,
+                    s.billing_doc_no, s.material_id, s.batch, m.material_name, m.producer_company, s.team, s.tp, s.vat, s.quantity, s.net_val,
                     0, 0, 0, 0
                 FROM rpl_sales_info_sap s
                 JOIN rdl_delivery_info_sap d ON s.billing_doc_no = d.billing_doc_no
                 JOIN rpl_customer_list c ON s.customer_id = c.customer_id
                 JOIN rdl_user_list u ON LTRIM(d.da_code, '0') = u.da_code
+                LEFT JOIN rpl_material_list m ON s.material_id = m.material_id
                 {date_filter}
                 ON CONFLICT (billing_doc_no, material_id, batch) DO NOTHING
             """

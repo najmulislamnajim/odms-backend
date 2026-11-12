@@ -8,7 +8,7 @@ from app.db.mixins import TimestampMixin
 from typing import TYPE_CHECKING 
 
 if TYPE_CHECKING:
-    from app.models.delivery_return_item import RdlDeliveryReturnItem
+    from app.models.delivery_collection import RdlDeliveryCollection
 
 class RdlReturnReason(Base, TimestampMixin):
     __tablename__ = "rdl_return_reason"
@@ -17,4 +17,4 @@ class RdlReturnReason(Base, TimestampMixin):
     reason_name: Mapped[str] = mapped_column(String(100))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     
-    items: Mapped[list["RdlDeliveryReturnItem"]] = relationship(back_populates="return_reason")
+    invoices: Mapped[list["RdlDeliveryCollection"]] = relationship(back_populates="return_reason")

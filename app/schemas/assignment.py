@@ -48,7 +48,6 @@ class MaterialItem(BaseModel):
     delivery_net_val: Decimal 
     return_quantity: int 
     return_net_val: Decimal 
-    return_reason_code: str | None 
     
 class InvoiceDetail(BaseModel):
     "An invoice with its product lines and delivery/collection state."
@@ -63,6 +62,7 @@ class InvoiceDetail(BaseModel):
     collection_status: bool 
     return_type: str | None 
     materials: list[MaterialItem]
+    return_reason_code: str | None 
     
 class AssignmentDetail(BaseModel): 
     """A DA's full assignment for one customer on a given date."""

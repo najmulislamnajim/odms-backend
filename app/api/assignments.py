@@ -39,7 +39,7 @@ def _build_material_item(item: RdlDeliveryReturnItem) -> MaterialItem:
     """Map an invoice line to its API representation."""
     return MaterialItem(
         material_id=item.material_id, 
-        material_name=item.material.material_name if item.material else None, 
+        material_name=item.material_name, 
         batch = item.batch, 
         quantity=item.quantity, 
         net_val=item.net_val,
@@ -47,7 +47,6 @@ def _build_material_item(item: RdlDeliveryReturnItem) -> MaterialItem:
         delivery_net_val = item.delivery_net_val,
         return_quantity=item.return_quantity, 
         return_net_val=item.return_net_val,
-        return_reason_code=item.return_reason_code,
     )
     
 def _build_invoice_detail(invoice: RdlDeliveryCollection) -> InvoiceDetail:
@@ -61,7 +60,7 @@ def _build_invoice_detail(invoice: RdlDeliveryCollection) -> InvoiceDetail:
         invoice.invoice_value - return_amount if invoice.delivery_status else ZERO
     )
     producer_company = next(
-        (item.material.producer_company for item in invoice.items if item.material), 
+        (item.producer_company for item in invoice.items if item.producer_company),
         None,
     )
     
@@ -76,6 +75,7 @@ def _build_invoice_detail(invoice: RdlDeliveryCollection) -> InvoiceDetail:
         collection_status = invoice.cash_collection_status,
         return_status=invoice.return_status,
         return_type=invoice.return_type,
+        return_reason_code=invoice.return_reason_code,
         materials=[_build_material_item(item) for item in invoice.items]
     ) 
     
@@ -199,9 +199,7 @@ async def get_assignment_detail(
         select(RdlDeliveryCollection)
         .options(
             selectinload(RdlDeliveryCollection.customer),
-            selectinload(RdlDeliveryCollection.items).selectinload(
-                RdlDeliveryReturnItem.material
-            ),
+            selectinload(RdlDeliveryCollection.items),
         ).where(
             RdlDeliveryCollection.da_code == current_da.da_code,
             RdlDeliveryCollection.customer_id == customer_id,

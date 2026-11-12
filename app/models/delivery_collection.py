@@ -11,10 +11,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.customer import RplCustomerList
     from app.models.user import RdlUserList
-    from app.models.material import RplMaterialList
     from app.models.overdue import RdlOverdue
     from app.models.payment import RdlPaymentHistory
     from app.models.delivery_return_item import RdlDeliveryReturnItem
+    from app.models.return_reason import RdlReturnReason
 
 class RdlDeliveryCollection(Base, TimestampMixin):
     __tablename__ = "rdl_delivery_collection"
@@ -61,10 +61,15 @@ class RdlDeliveryCollection(Base, TimestampMixin):
     due_status:Mapped[bool] = mapped_column(Boolean, default=False)
     due_value: Mapped[Decimal | None] = mapped_column(Numeric(18,2), nullable=True)
     return_type: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    
+    return_reason_code: Mapped[str | None] = mapped_column(
+        String(10),
+        ForeignKey("rdl_return_reason.reason_code", ondelete="RESTRICT"),
+        nullable=True,
+    )
     customer: Mapped["RplCustomerList"] = relationship(back_populates="invoices")
     user: Mapped["RdlUserList"] = relationship(back_populates="invoices")
     items: Mapped[list["RdlDeliveryReturnItem"]] = relationship(back_populates="invoice")
     overdue: Mapped["RdlOverdue"] = relationship(back_populates="invoice")
     cash_collection: Mapped[list["RdlPaymentHistory"]] = relationship(back_populates="invoice")
+    return_reason: Mapped["RdlReturnReason | None"] = relationship(back_populates="invoices")
   

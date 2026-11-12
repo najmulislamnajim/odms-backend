@@ -123,6 +123,17 @@ async def save_delivery(
                     "Every line of the invoice must be sent."
                 ),
             )
+        
+        # Gate 5: an invoice with any returned line needs one reason
+        has_return = any(i.return_quantity > 0 for i in inv_input.items)
+        if has_return and not inv_input.return_reason_code:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail = (
+                    "return_reason_code is required for invoice "
+                    f"{inv_input.billing_doc_no} because it has returned items."
+                ),
+            )
 
         return_total = ZERO
         for item_input in inv_input.items:
@@ -143,16 +154,6 @@ async def save_delivery(
                     ),
                 )
 
-            # Gate 5: a returned line needs a reason
-            if item_input.return_quantity > 0 and not item_input.return_reason_code:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"return_reason_code is required for returned material "
-                        f"{item_input.material_id} in invoice {inv_input.billing_doc_no}"
-                    ),
-                )
-
             # Compute money from the stored net_val (never from the client)
             return_qty = db_item.quantity - item_input.delivery_quantity
             delivery_net_val, return_net_val = _split_value(
@@ -163,20 +164,22 @@ async def save_delivery(
             db_item.return_quantity = return_qty
             db_item.delivery_net_val = delivery_net_val
             db_item.return_net_val = return_net_val
-            db_item.return_reason_code = item_input.return_reason_code
 
             return_total += return_net_val
 
         # --- Update the invoice header ------------------------------------
         db_invoice.return_value = return_total
         db_invoice.return_status = return_total > ZERO
+        # Keep a reason only when something was actually returned
+        db_invoice.return_reason_code = (
+            inv_input.return_reason_code if has_return else None
+        )
         if return_total == ZERO:
             db_invoice.return_type = None
         elif return_total >= db_invoice.invoice_value:
             db_invoice.return_type = "F"  # full return
         else:
             db_invoice.return_type = "P"  # partial return
-
         db_invoice.delivery_status = True
         db_invoice.delivery_datetime = now
         db_invoice.delivery_latitude = payload.latitude
