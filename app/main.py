@@ -7,6 +7,7 @@ from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from app.core.logging import get_logger
+from app.core.exceptions import AppError
 from app.api.v1 import router as api_v1_router
 
 logger = get_logger("api", category="api")
@@ -42,6 +43,13 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content={"success": False, "message": exc.detail, "data": None},
     )
 
+@app.exception_handler(AppError)
+async def app_error_handler(request: Request, exc: AppError):
+    """Return service-layer errors in the standard response format."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"success": False, "message": exc.message, "data": None}
+    )
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
