@@ -21,3 +21,7 @@ from app.models.customer_sync_reject import RdlCustomerSyncReject  # noqa: F401
 from app.models.transform_skip import RdlTransformSkip  # noqa: F401
 from app.models.refresh_token import RdlRefreshToken  # noqa: F401
 from app.models.return_reason import RdlReturnReason  # noqa: F401
+from app.models.role import RdlRole  # noqa: F401
+from app.models.panel_user import RdlPanelUser, RdlPanelUserDepot  # noqa: F401
+from app.models.panel_credential import RdlPanelCredential  # noqa: F401
+from app.models.panel_refresh_token import RdlPanelRefreshToken  # noqa: F401
