@@ -27,3 +27,12 @@ class BusinessRuleError(AppError):
     
     status_code = 422 
     
+class UnauthorizedError(AppError):
+    """Identity could not be verified (bad credentials or token)."""
+
+    status_code = 401
+
+class ForbiddenError(AppError):
+    """Identity is known but the action is not allowed (e.g. locked account)."""
+
+    status_code = 403
