@@ -14,7 +14,13 @@ class AssignmentFilter(str, Enum):
     COLLECTION_DONE = "collection_done"
     DELIVERY_PENDING = "delivery_pending"
     COLLECTION_PENDING = "collection_pending"
+    DONE = "done"
 
+class CustomerStatus(str, Enum):
+    """Where a customer stands for the day; values match the filter names."""
+    DELIVERY_PENDING = "delivery_pending"
+    COLLECTION_PENDING = "collection_pending"
+    DONE = "done"
 
 class CustomerSummary(BaseModel):
     """Per-customer summary of a DA's assigned invoices for a given date."""
@@ -27,7 +33,7 @@ class CustomerSummary(BaseModel):
     collected_amount: Decimal
     return_amount: Decimal
     # overdue: Decimal
-    status: str | None 
+    status: CustomerStatus
     
 class CustomerInfo(BaseModel):
     """Customer profile shown at the top of the detail screen."""

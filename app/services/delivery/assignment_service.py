@@ -1,0 +1,180 @@
+# Python Imports
+from datetime import date
+from decimal import Decimal
+
+# SQLAlchemy Imports
+from sqlalchemy import Numeric, and_, case, cast, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+# App Imports
+from app.core.exceptions import NotFoundError
+from app.models.customer import RplCustomerList
+from app.models.delivery_collection import RdlDeliveryCollection
+from app.models.delivery_return_item import RdlDeliveryReturnItem
+from app.schemas.assignment import (
+    AssignmentDetail,
+    AssignmentFilter,
+    CustomerStatus,
+    CustomerInfo,
+    CustomerSummary,
+    InvoiceDetail,
+    MaterialItem,
+)
+
+ZERO = Decimal("0.00")
+
+
+# ---------------------------------------------------------------------------
+# Mapping helpers (ORM row -> schema)
+# ---------------------------------------------------------------------------
+
+def _build_material_item(item: RdlDeliveryReturnItem) -> MaterialItem:
+    return MaterialItem(
+        material_id=item.material_id,
+        material_name=item.material_name,
+        batch=item.batch,
+        quantity=item.quantity,
+        net_val=item.net_val,
+        delivery_quantity=item.delivery_quantity,
+        delivery_net_val=item.delivery_net_val,
+        return_quantity=item.return_quantity,
+        return_net_val=item.return_net_val,
+    )
+
+
+def _build_invoice_detail(invoice: RdlDeliveryCollection) -> InvoiceDetail:
+    """An invoice belongs to one producer company, so any line's company represents it."""
+    return_amount = invoice.return_value or ZERO
+    delivered_amount = invoice.invoice_value - return_amount if invoice.delivery_status else ZERO
+    producer_company = next(
+        (item.producer_company for item in invoice.items if item.producer_company), None
+    )
+    return InvoiceDetail(
+        billing_doc_no=invoice.billing_doc_no,
+        producer_company=producer_company,
+        invoice_value=invoice.invoice_value,
+        delivered_amount=delivered_amount,
+        return_amount=return_amount,
+        collected_amount=invoice.cash_collection_value or ZERO,
+        delivery_status=invoice.delivery_status,
+        collection_status=invoice.cash_collection_status,
+        return_status=invoice.return_status,
+        return_type=invoice.return_type,
+        return_reason_code=invoice.return_reason_code,
+        materials=[_build_material_item(item) for item in invoice.items],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Queries
+# ---------------------------------------------------------------------------
+
+async def list_customers(
+    db: AsyncSession,
+    da_code: str,
+    billing_date: date,
+    status_filter: AssignmentFilter = AssignmentFilter.ALL,
+) -> list[CustomerSummary]:
+    """A DA's customers for a date, with delivery and collection totals."""
+    invoice = RdlDeliveryCollection
+    is_delivery_pending = invoice.delivery_status.is_(False)
+    is_delivery_done = invoice.delivery_status.is_(True)
+    is_collection_pending = and_(
+        invoice.delivery_status.is_(True), invoice.cash_collection_status.is_(False)
+    )
+    is_collection_done = and_(
+        invoice.delivery_status.is_(True), invoice.cash_collection_status.is_(True)
+    )
+
+    # Checked top to bottom; the first stage that matches wins
+    status_case = case(
+        (func.count().filter(is_delivery_pending) > 0, CustomerStatus.DELIVERY_PENDING.value),
+        (func.count().filter(is_collection_pending) > 0, CustomerStatus.COLLECTION_PENDING.value),
+        else_=CustomerStatus.DONE.value,
+    )
+
+    # Delivered value counts only once the invoice is actually delivered
+    delivered_value = case(
+        (
+            invoice.delivery_status.is_(True),
+            invoice.invoice_value - func.coalesce(invoice.return_value, 0),
+        ),
+        else_=cast(0, Numeric(18, 2)),
+    )
+
+    stmt = (
+        select(
+            RplCustomerList.customer_id,
+            RplCustomerList.shop_name,
+            RplCustomerList.street.label("address"),
+            func.count().label("invoice_count"),
+            func.sum(invoice.invoice_value).label("total_amount"),
+            func.sum(delivered_value).label("delivered_amount"),
+            func.sum(func.coalesce(invoice.cash_collection_value, 0)).label("collected_amount"),
+            func.sum(func.coalesce(invoice.return_value, 0)).label("return_amount"),
+            status_case.label("status"),
+        )
+        .join(RplCustomerList, invoice.customer_id == RplCustomerList.customer_id)
+        .where(invoice.da_code == da_code, invoice.billing_date == billing_date)
+        .group_by(
+            RplCustomerList.customer_id, RplCustomerList.shop_name, RplCustomerList.street
+        )
+        .order_by(RplCustomerList.shop_name)
+    )
+
+    # Filters compare aggregates, so they belong in HAVING rather than WHERE
+    if status_filter is AssignmentFilter.DELIVERY_PENDING:
+        stmt = stmt.having(func.count().filter(is_delivery_pending) > 0)
+    elif status_filter is AssignmentFilter.DELIVERY_DONE:
+        stmt = stmt.having(func.count().filter(is_delivery_done) > 0)
+    elif status_filter is AssignmentFilter.COLLECTION_PENDING:
+        stmt = stmt.having(func.count().filter(is_collection_pending) > 0)
+    elif status_filter is AssignmentFilter.COLLECTION_DONE:
+        stmt = stmt.having(func.count().filter(is_collection_done) > 0)
+    elif status_filter is AssignmentFilter.DONE:
+        # Done means every invoice of the customer is collected
+        stmt = stmt.having(func.count().filter(is_collection_done) == func.count())
+
+    rows = (await db.execute(stmt)).all()
+    return [CustomerSummary(**row._mapping) for row in rows]
+
+
+async def get_detail(
+    db: AsyncSession, da_code: str, customer_id: str, billing_date: date
+) -> AssignmentDetail:
+    """One customer's invoices for a date, with product lines and current state."""
+    # selectinload fetches customer and items in bulk, avoiding N+1 queries
+    stmt = (
+        select(RdlDeliveryCollection)
+        .options(
+            selectinload(RdlDeliveryCollection.customer),
+            selectinload(RdlDeliveryCollection.items),
+        )
+        .where(
+            RdlDeliveryCollection.da_code == da_code,
+            RdlDeliveryCollection.customer_id == customer_id,
+            RdlDeliveryCollection.billing_date == billing_date,
+        )
+        .order_by(RdlDeliveryCollection.billing_doc_no)
+    )
+    invoices = (await db.execute(stmt)).scalars().all()
+    if not invoices:
+        raise NotFoundError("No assignment found for this customer on the given date.")
+
+    customer = invoices[0].customer
+    details = [_build_invoice_detail(inv) for inv in invoices]
+
+    return AssignmentDetail(
+        customer=CustomerInfo(
+            customer_id=customer.customer_id,
+            shop_name=customer.shop_name,
+            address=customer.street,
+            mobile_no=customer.mobile_no,
+        ),
+        billing_date=billing_date,
+        total_amount=sum((inv.invoice_value for inv in invoices), ZERO),
+        delivered_amount=sum((d.delivered_amount for d in details), ZERO),
+        collected_amount=sum((d.collected_amount for d in details), ZERO),
+        invoices=details,
+    )
