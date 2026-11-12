@@ -3,7 +3,7 @@ from app.db.base_class import Base  # noqa: F401
 from app.models.attendance import RdlAttendance #noqa F401
 from app.models.conveyance import RdlConveyance #noqa F401 
 from app.models.customer_visit import RdlCustomerVisit #noqa F401 
-from app.models.customer import RplCustomerList, RplCustomerSalesOrg, RplCustomerTerritory, RplCustomerRouteHistory, RdlCustomerLocation  # noqa: F401
+from app.models.customer import RplCustomerList, RplCustomerSalesOrg, RplCustomerTerritory, RplCustomerRouteHistory, RdlCustomerLocation , RdlCustomerLocationHistory # noqa: F401
 from app.models.delivery_collection import RdlDeliveryCollection #noqa F401
 from app.models.delivery_info_sap import RdlDeliveryInfoSap #noqa F401
 from app.models.delivery_return_item import RdlDeliveryReturnItem #noqa F401
